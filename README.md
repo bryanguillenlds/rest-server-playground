@@ -1,8 +1,3 @@
-
-
-
-
-
 # Dev
 
-1. Clonar el .env.template y crear el .env
+1. Copy .env.template to create your own .env

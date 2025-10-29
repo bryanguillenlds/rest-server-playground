@@ -22,6 +22,8 @@ export class Server {
 
   async start() {
     //* Middlewares
+    this.app.use(express.json()); //global middleware to parse the body of the request as JSON
+    this.app.use(express.urlencoded({ extended: true })); //global middleware to parse the body of the request as URL encoded data
 
     //* Public Folder
     this.app.use(express.static(this.publicPath));
