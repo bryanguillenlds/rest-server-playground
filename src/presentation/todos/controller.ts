@@ -5,16 +5,19 @@ const todos = [
     id: 1,
     title: "Buy a car",
     createdAt: new Date(),
+    updatedAt: null as Date | null,
   },
   {
     id: 2,
     title: "Buy a house",
-    createdAt: null,
+    createdAt: new Date(),
+    updatedAt: null as Date | null,
   },
   {
     id: 3,
     title: "Buy a boat",
     createdAt: new Date(),
+    updatedAt: null as Date | null,
   },
 ];
 export class TodosController {
@@ -53,10 +56,56 @@ export class TodosController {
       id: todos.length + 1,
       title,
       createdAt: new Date(),
+      updatedAt: null,
     };
 
     todos.push(newTodo);
 
     return res.status(201).json(newTodo);
+  };
+
+  public updateTodo = (req: Request, res: Response) => {
+    const id = +req.params.id;
+
+    if (isNaN(id)) {
+      return res.status(400).json({ ERROR: `ID is not a number` });
+    }
+
+    const todo = todos.find((todo) => todo.id === id);
+
+    if (!todo) {
+      return res.status(404).json({ ERROR: `Todo with ID: ${id} not found` });
+    }
+
+    const { title } = req.body;
+
+    if (!title) {
+      return res.status(400).json({ ERROR: `Title is required` });
+    }
+
+    const updatedTodo = { ...todo, title, updatedAt: new Date() };
+    const updatedTodoIndex = todos.findIndex((todo) => todo.id === id);
+    todos[updatedTodoIndex] = updatedTodo as any;
+
+    return res.json(updatedTodo);
+  };
+
+  public deleteTodo = (req: Request, res: Response) => {
+    const id = +req.params.id;
+
+    if (isNaN(id)) {
+      return res.status(400).json({ ERROR: `ID is not a number` });
+    }
+
+    const todo = todos.find((todo) => todo.id === id);
+
+    if (!todo) {
+      return res.status(404).json({ ERROR: `Todo with ID: ${id} not found` });
+    }
+
+    const deletedTodo = todo;
+    todos.splice(todos.indexOf(todo), 1);
+
+    return res.json({ message: `Todo with ID: ${id} deleted`, deletedTodo });
   };
 }
