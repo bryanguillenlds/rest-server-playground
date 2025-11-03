@@ -1,42 +1,28 @@
 import { Request, Response } from "express";
+import { prisma } from "../../data/postgres";
 
-const todos = [
-  {
-    id: 1,
-    title: "Buy a car",
-    createdAt: new Date(),
-    updatedAt: null as Date | null,
-  },
-  {
-    id: 2,
-    title: "Buy a house",
-    createdAt: new Date(),
-    updatedAt: null as Date | null,
-  },
-  {
-    id: 3,
-    title: "Buy a boat",
-    createdAt: new Date(),
-    updatedAt: null as Date | null,
-  },
-];
 export class TodosController {
   //* DI
   constructor() {}
 
   //* GET /api/todos
-  public getTodos = (req: Request, res: Response) => {
+  public getTodos = async (req: Request, res: Response) => {
+    const todos = await prisma.todo.findMany();
     return res.json(todos);
   };
 
-  public getTodoById = (req: Request, res: Response) => {
+  public getTodoById = async (req: Request, res: Response) => {
     const id = +req.params.id;
 
     if (isNaN(id)) {
       return res.status(400).json({ ERROR: `ID is not a number` });
     }
 
-    const todo = todos.find((todo) => todo.id === id);
+    const todo = await prisma.todo.findUnique({
+      where: {
+        id,
+      },
+    });
 
     if (!todo) {
       return res.status(404).json({ ERROR: `Todo with ID: ${id} not found` });
@@ -45,33 +31,34 @@ export class TodosController {
     return res.json(todo);
   };
 
-  public createTodo = (req: Request, res: Response) => {
+  public createTodo = async (req: Request, res: Response) => {
     const { title } = req.body;
 
     if (!title) {
       return res.status(400).json({ ERROR: `Title is required` });
     }
 
-    const newTodo = {
-      id: todos.length + 1,
-      title,
-      createdAt: new Date(),
-      updatedAt: null,
-    };
+    const todo = await prisma.todo.create({
+      data: {
+        title,
+      },
+    });
 
-    todos.push(newTodo);
-
-    return res.status(201).json(newTodo);
+    return res.status(201).json(todo);
   };
 
-  public updateTodo = (req: Request, res: Response) => {
+  public updateTodo = async (req: Request, res: Response) => {
     const id = +req.params.id;
 
     if (isNaN(id)) {
       return res.status(400).json({ ERROR: `ID is not a number` });
     }
 
-    const todo = todos.find((todo) => todo.id === id);
+    const todo = await prisma.todo.findUnique({
+      where: {
+        id,
+      },
+    });
 
     if (!todo) {
       return res.status(404).json({ ERROR: `Todo with ID: ${id} not found` });
@@ -83,29 +70,55 @@ export class TodosController {
       return res.status(400).json({ ERROR: `Title is required` });
     }
 
-    const updatedTodo = { ...todo, title, updatedAt: new Date() };
-    const updatedTodoIndex = todos.findIndex((todo) => todo.id === id);
-    todos[updatedTodoIndex] = updatedTodo as any;
+    // Only update if the title actually changed
+    // We allow the req to come through but we don't update so we stay idempotent
+    if (todo.title === title) {
+      return res.json(todo); // Return existing todo without updating
+    }
+
+    const updatedTodo = await prisma.todo.update({
+      where: {
+        id,
+      },
+      data: {
+        title,
+      },
+    });
 
     return res.json(updatedTodo);
   };
 
-  public deleteTodo = (req: Request, res: Response) => {
+  public deleteTodo = async (req: Request, res: Response) => {
     const id = +req.params.id;
 
     if (isNaN(id)) {
       return res.status(400).json({ ERROR: `ID is not a number` });
     }
 
-    const todo = todos.find((todo) => todo.id === id);
+    const todo = await prisma.todo.findUnique({
+      where: {
+        id,
+      },
+    });
 
     if (!todo) {
       return res.status(404).json({ ERROR: `Todo with ID: ${id} not found` });
     }
 
-    const deletedTodo = todo;
-    todos.splice(todos.indexOf(todo), 1);
+    const deletedTodo = await prisma.todo.delete({
+      where: {
+        id,
+      },
+    });
 
-    return res.json({ message: `Todo with ID: ${id} deleted`, deletedTodo });
+    if (!deletedTodo) {
+      return res
+        .status(400)
+        .json({ ERROR: `Not Possible to delete Todo with ID: ${id}` });
+    }
+
+    return res
+      .status(200)
+      .json({ message: `Todo with ID: ${id} deleted`, deletedTodo });
   };
 }
