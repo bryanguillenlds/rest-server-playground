@@ -4,7 +4,7 @@ import { CreateTodoDto } from "../../domain/dtos";
 import { UpdateTodoDto } from "../../domain/dtos";
 import { TodoRepository } from "../../domain/repositories/todo.repository";
 
-export class TodosController {
+export class TodosControllerDDD {
   //* DI
   constructor(private readonly todoRepository: TodoRepository) {}
 
