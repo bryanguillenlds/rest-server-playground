@@ -1,8 +1,12 @@
 export class UpdateTodoDto {
-  constructor(public readonly id: number, public readonly title?: string) {}
+  constructor(
+    public readonly id: number,
+    public readonly title?: string,
+    public readonly completedAt?: boolean
+  ) {}
 
   static create(props: { [key: string]: any }): [string?, UpdateTodoDto?] {
-    const { id, title } = props;
+    const { id, title, completedAt } = props;
 
     // Validate ID is provided
     if (id === undefined) {
@@ -31,6 +35,13 @@ export class UpdateTodoDto {
       }
     }
 
-    return [undefined, new UpdateTodoDto(numericId, title)];
+    // Validate completedAt if provided
+    if (completedAt !== undefined) {
+      if (typeof completedAt !== "boolean") {
+        return ["completedAt must be a boolean", undefined];
+      }
+    }
+
+    return [undefined, new UpdateTodoDto(numericId, title, completedAt)];
   }
 }

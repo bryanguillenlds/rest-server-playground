@@ -71,24 +71,33 @@ export class TodosController {
         .json({ ERROR: `Todo with ID: ${updateTodoDto!.id} not found` });
     }
 
-    // Only update if the title actually changed
+    // Build update data object
+    const updateData: { title?: string; completedAt?: boolean } = {};
+
+    // Only include title if it's provided and different
+    if (updateTodoDto!.title !== undefined) {
+      if (todo.title !== updateTodoDto!.title) {
+        updateData.title = updateTodoDto!.title;
+      }
+    }
+
+    // Include completedAt if provided
+    if (updateTodoDto!.completedAt !== undefined) {
+      updateData.completedAt = updateTodoDto!.completedAt;
+    }
+
+    // Only update if there are changes
     // We allow the req to come through but we don't update so we stay idempotent
-    // If no title provided, return existing todo (no-op)
-    if (!updateTodoDto!.title) {
+    if (Object.keys(updateData).length === 0) {
       return res.json(todo);
     }
 
-    if (todo.title === updateTodoDto!.title) {
-      return res.json(todo); // Return existing todo without updating
-    }
-
+    // Update the todo (updatedAt will automatically update via Prisma's @updatedAt)
     const updatedTodo = await prisma.todo.update({
       where: {
         id: updateTodoDto!.id,
       },
-      data: {
-        title: updateTodoDto!.title,
-      },
+      data: updateData,
     });
 
     return res.json(updatedTodo);
