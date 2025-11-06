@@ -15,8 +15,9 @@ datasource db {
 }
 
 model Todo {
-  id        Int      @id @default(autoincrement())
-  title     String   @db.VarChar
-  createdAt DateTime @default(now()) @db.Timestamp()
-  updatedAt DateTime @default(now()) @updatedAt @db.Timestamp()
+  id          Int      @id @default(autoincrement())
+  title       String   @db.VarChar
+  completedAt Boolean  @default(false)
+  createdAt   DateTime @default(now()) @db.Timestamp()
+  updatedAt   DateTime @default(now()) @updatedAt @db.Timestamp()
 }
