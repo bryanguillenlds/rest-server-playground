@@ -3,5 +3,6 @@
 node_modules/
 keys/
 .env
+.env.test
 /postgres
 /src/generated/prisma
