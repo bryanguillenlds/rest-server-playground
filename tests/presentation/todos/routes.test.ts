@@ -113,4 +113,33 @@ describe("TodosRoutes.ts", () => {
 
     expect(body.ERROR).toBe("Todo with ID: 1000 not found");
   });
+
+  it("should delete a TODO api/todo/:id", async () => {
+    const todo = await prisma.todo.create({
+      data: todo1,
+    });
+
+    const { body } = await request(testServer.app)
+      .delete(`/api/todos/${todo.id}`)
+      .expect(200);
+
+    expect(body.message).toBe(`Todo with ID: ${todo.id} deleted`);
+    expect(body.todo.id).toEqual(todo.id);
+
+    const todoFound = await prisma.todo.findUnique({
+      where: {
+        id: todo.id,
+      },
+    });
+
+    expect(todoFound).toBeNull();
+  });
+
+  it("should return 404 if TODO not found api/todos/:id", async () => {
+    const { body } = await request(testServer.app)
+      .delete(`/api/todos/1000`)
+      .expect(404);
+
+    expect(body.ERROR).toBe("Todo with ID: 1000 not found");
+  });
 });
