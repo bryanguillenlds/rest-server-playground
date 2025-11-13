@@ -6,11 +6,20 @@ import { GetTodosUseCaseImpl } from "../../domain/use-cases/todos/get-todos";
 import { GetTodoUseCaseImpl } from "../../domain/use-cases/todos/get-todo";
 import { CreateTodoUseCaseImpl } from "../../domain/use-cases/todos/create-todos";
 import { UpdateTodoUseCaseImpl } from "../../domain/use-cases/todos/update-todos";
-import { DeleteTodoUseCaseImpl } from "../../domain";
+import { CustomError, DeleteTodoUseCaseImpl } from "../../domain";
 
 export class TodosController {
   //* DI
   constructor(private readonly todoRepository: TodoRepository) {}
+
+  // This is so that we can handle our own custom errors and also errors that are not our own
+  private handleError(response: Response, error: unknown) {
+    if (error instanceof CustomError) {
+      return response.status(error.statusCode).json({ ERROR: error.message });
+    }
+
+    return response.status(500).json({ ERROR: "Internal server error" });
+  }
 
   //* GET /api/todos
   public getTodos = (req: Request, res: Response) => {
@@ -20,14 +29,11 @@ export class TodosController {
         return res.status(200).json(todos);
       })
       .catch((error) => {
-        if (error instanceof Error && error.message.includes("not found")) {
-          return res.status(404).json({ ERROR: error.message });
-        }
-
-        return res.status(500).json({ ERROR: "Internal server error" });
+        return this.handleError(res, error);
       });
   };
 
+  //* GET /api/todos/:id
   public getTodoById = (req: Request, res: Response) => {
     const id = +req.params.id;
 
@@ -37,14 +43,11 @@ export class TodosController {
         return res.status(200).json(todo);
       })
       .catch((error) => {
-        if (error instanceof Error && error.message.includes("not found")) {
-          return res.status(404).json({ ERROR: error.message });
-        }
-
-        return res.status(500).json({ ERROR: "Internal server error" });
+        return this.handleError(res, error);
       });
   };
 
+  //* POST /api/todos
   public createTodo = (req: Request, res: Response) => {
     const [error, createTodoDto] = CreateTodoDto.create(req.body);
 
@@ -58,14 +61,11 @@ export class TodosController {
         return res.status(201).json(todo);
       })
       .catch((error) => {
-        if (error instanceof Error && error.message.includes("not found")) {
-          return res.status(404).json({ ERROR: error.message });
-        }
-
-        return res.status(500).json({ ERROR: "Internal server error" });
+        return this.handleError(res, error);
       });
   };
 
+  //* PATCH /api/todos/:id
   public updateTodo = (req: Request, res: Response) => {
     const [error, updateTodoDto] = UpdateTodoDto.create({
       ...req.body,
@@ -82,14 +82,11 @@ export class TodosController {
         return res.status(200).json(todo);
       })
       .catch((error) => {
-        if (error instanceof Error && error.message.includes("not found")) {
-          return res.status(404).json({ ERROR: error.message });
-        }
-
-        return res.status(500).json({ ERROR: "Internal server error" });
+        return this.handleError(res, error);
       });
   };
 
+  //* DELETE /api/todos/:id
   public deleteTodo = (req: Request, res: Response) => {
     const id = +req.params.id;
 
@@ -105,11 +102,7 @@ export class TodosController {
           .json({ message: `Todo with ID: ${id} deleted`, todo });
       })
       .catch((error) => {
-        if (error instanceof Error && error.message.includes("not found")) {
-          return res.status(404).json({ ERROR: error.message });
-        }
-
-        return res.status(500).json({ ERROR: "Internal server error" });
+        return this.handleError(res, error);
       });
   };
 }
