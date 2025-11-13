@@ -24,6 +24,14 @@ export class UpdateTodoDto {
       return ["ID must be a positive number", undefined];
     }
 
+    // Validate that at least one field is provided
+    if (title === undefined && completedAt === undefined) {
+      return [
+        "At least one field (title or completedAt) must be provided",
+        undefined,
+      ];
+    }
+
     // Validate title if provided
     if (title !== undefined) {
       if (typeof title !== "string") {
