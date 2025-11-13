@@ -1,5 +1,10 @@
 import { TodoDatasource } from "../../domain/datasources/todo.datasource";
-import { CreateTodoDto, TodoEntity, UpdateTodoDto } from "../../domain";
+import {
+  CreateTodoDto,
+  CustomError,
+  TodoEntity,
+  UpdateTodoDto,
+} from "../../domain";
 import { prisma } from "../../data/postgres";
 
 export class TodoDatasourceImpl extends TodoDatasource {
@@ -26,7 +31,7 @@ export class TodoDatasourceImpl extends TodoDatasource {
       },
     });
 
-    if (!todo) throw new Error(`Todo with ID: ${id} not found`);
+    if (!todo) throw new CustomError(`Todo with ID: ${id} not found`, 404);
 
     return TodoEntity.fromObject(todo);
   }
@@ -36,8 +41,6 @@ export class TodoDatasourceImpl extends TodoDatasource {
     updateTodoDto: UpdateTodoDto
   ): Promise<TodoEntity> {
     const todo = await this.findById(updateTodoDto.id);
-
-    if (!todo) throw new Error(`Todo with ID: ${id} not found`);
 
     // Build update data object
     const updateData: { title?: string; completedAt?: boolean } = {};
